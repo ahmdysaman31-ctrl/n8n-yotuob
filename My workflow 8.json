@@ -1,0 +1,399 @@
+{
+  "name": "My workflow 8",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 20
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        368
+      ],
+      "id": "8c95f28b-2335-46c0-9bfc-2962737260ff",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=write a promp for {{ $json.randomNumber }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an AI that generates random video prompts for short form content.  \nYou ONLY output must strictly follow this JSON structure:\n\n{\n  \"title\": \"Exciting, descriptive, simplistic title here\",\n  \"description\": \"Short, few sentence description based on the story\",\n  \"prompt\": \"AI video generation prompt here\"\n}\n\nGuidelines:\n* The \"title\" must be short, eye-catching, and easy to understand.\n* The \"description\" should be 1–3 sentences summarizing the crazy event in a fun, engaging way.\n* The \"prompt\" must be a detailed AI video generation prompt describing the scene from the primary video types below. Always choose a random one.\n* Never break JSON format. Never add extra text or explanation outside the JSON.\n* Never repeat a video, always cycle through them.\n\nPrimary Video Types:\n1. Home camera video of a baby in a onesie curiously climbing up to a high open window when a dog comes up from behind and grabs the baby and pulls it down from the window backward to the floor to stop the baby from falling out. After this, the mom comes rushing in to check what happened.\n\n2. Grocery store footage of a man jumping while pushing his shopping cart, losing control and knocking over all of the shelves in the store.\n\n3. Home camera video of a person and their dog and cat, there is a big argument, and the cat is meowing and pointing at the dog, the dog barks, and the owner is listening to the cat.\n\n4. Home camera video of a man on the toilet, when suddenly an animal smashes through the bathroom window and runs around inside, chaotic.\n\n5. A kid is curiously playing near an electrical outlet which zaps when touched, when a dog comes over and pulls the kid away, the parents come in afterward.\n\n6. Low quality wobbly smartphone footage of a dinner table with lots of people, when suddenly a cat jumps from a balcony in the home onto the chandelier and swings from it, when the chandelier falls onto the table.\n\n7. Low quality steady smartphone footage of a couple being married and about to cut a massive wedding cake with a dog looking at it, when suddenly before they cut the cake the dog jumps up and bites the cake and everyone freaks out.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        368
+      ],
+      "id": "a937aa6b-e76a-4a43-ad70-41491d1bc5c6",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        608
+      ],
+      "id": "bdfc5759-0d4b-4f06-af7b-464cd5af8ee9",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OuRX5MrpsGXwuTlr",
+          "name": "Google Gemini(PaLM) Api account 8"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "={\n  \"type\": \"object\",\n  \"properties\": {\n    \"title\": {\n      \"type\": \"string\",\n      \"description\": \"A short, exciting, descriptive, simplistic YouTube Shorts title\"\n    },\n    \"description\": {\n      \"type\": \"string\",\n      \"description\": \"1-3 sentences summarizing the crazy water event\"\n    },\n    \"prompt\": {\n      \"type\": \"string\",\n      \"description\": \"A detailed AI video generation prompt\"\n    }\n  },\n  \"required\": [\"title\", \"description\", \"prompt\"]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        592
+      ],
+      "id": "2086971c-3a00-4d9f-93a1-450525abb80e",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/sora-2/text-to-video",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Key here"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $json.output.prompt }}"
+            },
+            {
+              "name": "resolution",
+              "value": "720p"
+            },
+            {
+              "name": "aspect_ratio",
+              "value": "9:16"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        368,
+        368
+      ],
+      "id": "9f803fd3-aa0c-4fad-966f-b94f1ea3b567",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "url": "=https://queue.fal.run/fal-ai/sora-2/requests/{{ $json.request_id }}/status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Key here"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        592,
+        368
+      ],
+      "id": "495265f2-5aa1-4d3c-93f6-0bc358773b31",
+      "name": "HTTP Request5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "42f0356a-bab5-499c-9517-e04481b50828",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "COMPLETED",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        784,
+        368
+      ],
+      "id": "83c970fd-9c26-4964-b1b5-0a881457043e",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        576
+      ],
+      "id": "c9a90230-55d1-45ac-b99f-b271748d58f4",
+      "name": "Wait1",
+      "webhookId": "a9f47add-d269-43c6-b153-ffdaa1526f79"
+    },
+    {
+      "parameters": {
+        "url": "=https://queue.fal.run/fal-ai/sora-2/requests/{{ $json.request_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Key here"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        352
+      ],
+      "id": "3a159b67-34df-4d82-bdb2-c9bf43df1621",
+      "name": "HTTP Request6"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.video.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1216,
+        352
+      ],
+      "id": "839dc149-fae8-4b9c-90b1-a1eaa346028a",
+      "name": "HTTP Request7"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('AI Agent1').item.json.output.title }}",
+        "regionCode": "US",
+        "categoryId": "1",
+        "options": {
+          "description": "={{ $('AI Agent1').item.json.output.description }}"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        352
+      ],
+      "id": "7b1b1e6f-61f8-4aeb-b50f-e58fe5a301cc",
+      "name": "Upload a video1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const min = 1; // minimum value\nconst max = 20; // maximum value\nconst randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;\nreturn [{ json: { randomNumber } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        368
+      ],
+      "id": "179d117b-9f18-48e2-b88c-1a516f1facdb",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request6": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request7": {
+      "main": [
+        [
+          {
+            "node": "Upload a video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d757dadf-b50e-429c-93d6-1cb7292328ea",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6434f55d72a797c5296b01474d17cc50e8fb42d2e0bcea840f9e3a73987299ef"
+  },
+  "id": "rinWfqUnIQgGbsR5",
+  "tags": []
+}
